@@ -1,0 +1,28 @@
+{%extends 'base.html'%}
+{%block title%}Home{%endblock%}
+{%block body_block%} 
+<div class="row">
+    <div class="col-4"></div>
+    <div class="col-4">
+        {%for m in messages%}
+        {%if m.level == DEFAULT_MESSAGE_LEVELS.ERROR%}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>{{m}}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {%endif%}
+        {%if m.level == DEFAULT_MESSAGE_LEVELS.SUCCESS%}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>{{m}}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {%endif%}
+        {%endfor%}
+    </div>
+    <div class="col-4"></div>
+<h1>Welcome user {{request.user}}</h1>
+    <div>
+        <a href="{%url 'todo-add'%}">AddNewTodos</a>
+        <a href="{%url 'todo-list'%}">ListAllTodos</a>
+    </div>
+{%endblock%}

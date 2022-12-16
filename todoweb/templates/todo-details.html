@@ -1,0 +1,20 @@
+{%extends 'base.html'%}
+{%block title%}Details of TODO{%endblock%}
+{%block body_block%}
+<div class="row">
+    <div class="col-3"></div>
+    <div class="col-6">
+        <div class="card" style="width: 18rem;">
+            <div class="card-header text-center ">
+                {{todo.task_name}}
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">Title:{{todo.status}}</li>
+              <li class="list-group-item">Date:{{todo.created_date}}</li>
+              <li class="list-group-item">user:{{todo.user}}</li>
+            </ul>
+          </div>
+    </div>
+    <div class="col-3"></div>
+</div>
+{%endblock%}
