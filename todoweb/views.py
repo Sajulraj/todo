@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
-from django.views.generic import View,TemplateView
+from django.urls import reverse_lazy
+from django.views.generic import View,TemplateView,CreateView,FormView,ListView,DetailView
 from todoweb.form import UserRegistrationForm, UserLoginForm,TodoForm
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate,login,logout
@@ -18,24 +19,31 @@ def signin_required(fn):
             return fn(request,*args,**kw)
     return wrapper
 
-class RegisterView(View):
-    def get(self, request, *args, **kwargs):
-        form = UserRegistrationForm()
-        return render(request, "register.html", {"form":form})
+class RegisterView(CreateView):
+    template_name="register.html"
+    form_class=UserRegistrationForm
+    model=User
+    success_url=reverse_lazy("signin")
+    # def get(self, request, *args, **kwargs):
+    #     form = UserRegistrationForm()
+    #     return render(request, "register.html", {"form":form})
 
-    def post(self, request, *args, **kwargs):
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            User.objects.create_user(**form.cleaned_data)
-            messages.success(request,"your account has been created")
-            return redirect("signin")
-        else:
-            return render(request, "register.html", {"form":form})
+    # def post(self, request, *args, **kwargs):
+    #     form = UserRegistrationForm(request.POST)
+    #     if form.is_valid():
+    #         User.objects.create_user(**form.cleaned_data)
+    #         messages.success(request,"your account has been created")
+    #         return redirect("signin")
+    #     else:
+    #         return render(request, "register.html", {"form":form})
 
-class LoginView(View):
-    def get(self, request, *args, **kwargs):
-        form = UserLoginForm()
-        return render(request, "login.html", {"form":form})
+class LoginView(FormView):
+    template_name="login.html"
+    form_class=UserLoginForm
+    
+    # def get(self, request, *args, **kwargs):
+    #     form = UserLoginForm()
+    #     return render(request, "login.html", {"form":form})
 
     def post(self,request,*args,**kw):
         form= UserLoginForm(request.POST)
@@ -61,33 +69,52 @@ class IndexView(TemplateView):
     #     return render(request,"index.html")
 
 @method_decorator(signin_required,name="dispatch")
-class TodoListView(View):
-    def get(self,request,*args,**kw):
-        qs=Todos.objects.filter(user=request.user)
-        return render(request,"todo-list.html",{"todos":qs})
+class TodoListView(ListView):
+    template_name="todo-list.html"
+    model=Todos
+    context_object_name="todos"
+
+    def get_queryset(self):
+        return Todos.objects.filter(user=self.request.user) 
+    # def get(self,request,*args,**kw):
+    #     qs=Todos.objects.filter(user=request.user)
+    #     return render(request,"todo-list.html",{"todos":qs})
 
 @method_decorator(signin_required,name="dispatch")
-class TodoAddView(View):
-    def get(self,request,*args,**kw):
-        form=TodoForm()
-        return render(request,"todo-add.html",{"form":form})
+class TodoAddView(CreateView):
+    template_name="todo-add.html"
+    form_class=TodoForm
+    model=Todos
+    success_url=reverse_lazy("todo-list")
 
-    def post(self,request,*args,**kw):
-        form=TodoForm(request.POST)
-        if form.is_valid():
-            instance=form.save(commit=False)
-            instance.user=request.user
-            instance.save()
-            return redirect("todo-list")
-        else:
-            return render(request,"todo-add.html",{"form":form})
+    def form_valid(self, form):
+        form.instance.user=self.request.user
+        messages.success(self.request,"todo-created") 
+        return super().form_valid(form)
+    # def get(self,request,*args,**kw):
+    #     form=TodoForm()
+    #     return render(request,"todo-add.html",{"form":form})
+
+    # def post(self,request,*args,**kw):
+    #     form=TodoForm(request.POST)
+    #     if form.is_valid():
+    #         instance=form.save(commit=False)
+    #         instance.user=request.user
+    #         instance.save()
+    #         return redirect("todo-list")
+    #     else:
+    #         return render(request,"todo-add.html",{"form":form})
 
 @method_decorator(signin_required,name="dispatch")
-class TodoDetailView(View):
-    def get(self,request,*args,**kw):
-        id=kw.get("id")
-        qs=Todos.objects.get(id=id)
-        return render(request,"todo-details.html",{"todo":qs})
+class TodoDetailView(DetailView):
+    template_name="todo-details.html"
+    model=Todos
+    context_object_name="todo"
+    pk_url_kwarg="id"
+    # def get(self,request,*args,**kw):
+    #     id=kw.get("id")
+    #     qs=Todos.objects.get(id=id)
+    #     return render(request,"todo-details.html",{"todo":qs})
 
 @signin_required
 def todo_delete_view(request,*args,**kw):
